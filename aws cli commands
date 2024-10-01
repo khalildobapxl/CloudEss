@@ -1,0 +1,69 @@
+*************
+[   Start   ]
+*************
+
+Eerst en altijd moet je een lab starten in aws academy. Wanneer je een groen balleke ziet, kan je beginnen.
+1. Klik op AWS details. Kopieer het default gedeelte volledig en plak deze in .aws/credentials. Deze vind je in linux in je home folder of windows onder c/users/username/.aws.
+Als je het daar niet vindt, dan ga naar de terminal en voer uit: aws configure. hoeft niks te type gewoon enter enter tot het einde. nu vind je het mapje met credentials en kan je details daar plakken
+
+2. In Config bestand in .aws moet je deze gegevens aanvullen:
+[details]
+region=........[us-east-1]
+output=json
+region vind je onder aws details helemaal onderaan. en de output is json.
+
+3. Nu test je of dat gelukt is of niet door dit commando uit te voeren: aws sts get-caller-identity
+Je moet je e-mailadres krijgen
+
+
+*************
+[     S3    ]
+*************
+
+S3 (Simple Storage Service) is in essentie een system dat functioneert als een container die objecten kan opslaan. Je kan hem zien als een soort cloud opslag om daar data op te slaan.
+
+Setup:
+1. Eerst moet je een bucket (container) maken. De naam van de bucket moet uniek zijn doorheen de hele wereld, letterlijk, en mag geen hoofdletter bevatten.
+Dus het is best dat je uuidgen (of [guid]::NewGuid() in powershell) gebruikt na de naam. Deze gaat een uniek id genereren.
+
+bv:
+[Linux]
+aws s3 mb s3://"testbucket-$(uuidgen)"
+[PowerShell]
+aws s3 mb s3://testbucket-$([guid]::NewGuid())
+
+2. Nu moet je een mapje syncen met de bucket. in dit mapje kan je je data opslaan:
+aws s3 sync /home/khalil/bucket040 s3://[naam van je bucket]
+dan moet je zoiets krijgen: upload: bucket040/test to s3://bucket-0400d842-7a37-42c6-9e1b-21e053ca71d8/test
+Nu zijn de gegevens binnen het mapje geüploaded in je bucket.
+
+NOTE: je moet elke keer syncen om de nieuwe data op te slaan in je bucket.
+
+Je kan op de website je buckets ook checken. Ga naar de lab en klik op het groene balleke. je wordt doorgestuurd naar aws dashboard.
+In de zoek balk typ S3 en daarop klikken. Daar vind je al je buckets
+
+- Als je een bucket wil wegdoen: aws s3 rb s3://bucket-0400d842-7a37-42c6-9e1b-21e053ca71d8 --force
+--force gebruik je als de bucket niet leeg is.
+
+
+
+
+************
+[    EC3   ]
+************
+
+
+EC3 of Elastic Cloud Computing Cluster is gewoon een server instance op de cloud.
+
+Om de server aan te maken gaan we de dashboard gebruiken.
+1. Zoeken ec3 en daarop klikken. Daar klikken we op Launch instance.
+2. We vullen de naam in, het type systeem (in de les Amazon gekozen).
+3. In de key-pain sectie hebben we 2 mogelijkheden, ofwel een pair aanmaken maar pas op je hebt enkel een keer om de key te downloaden. Als je die kwijt ben, kan je je machine niet meer bereiken.
+Of vockey, deze kan je altijd downloaden in de lab onder aws details.
+4. in Storage kan je tot 30GB gratis gebruiken
+5. Klik op launch instance.
+
+Nu als je op je instance klikt zie je daaronder het public ip-adress. Met deze kan je je machine bereiken.
+Om dat te doen ga eerst naar de lab en download de key, met powershell gebruik pem met Putty gebruik ppk.
+in powershell doe: ssh -i [locatie van de key] ec2-user@[ipadres]
+de username ec2-user is standaard voor ec2 Amazon linx instances. Als je ubuntu gebruikt, is de username ubuntu.
