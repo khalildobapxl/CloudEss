@@ -1,0 +1,17 @@
+--2024-10-04 08:35:20--  https://2tin-cloudessentials-resources.github.io/cloud-essentials-labs/debuglabs/2_2.yml
+Resolving 2tin-cloudessentials-resources.github.io (2tin-cloudessentials-resources.github.io)... 185.199.109.153, 185.199.110.153, 185.199.111.153, ...
+Connecting to 2tin-cloudessentials-resources.github.io (2tin-cloudessentials-resources.github.io)|185.199.109.153|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 2932 (2.9K) [text/yaml]
+Saving to: ‘2_2.yml’
+
+     0K ..                                                    100% 2.42M=0.001s
+
+2024-10-04 08:35:20 (2.42 MB/s) - ‘2_2.yml’ saved [2932/2932]
+
+--2024-10-04 08:35:20--  http://2_2.yml/
+Resolving 2_2.yml (2_2.yml)... failed: Name or service not known.
+wget: unable to resolve host address ‘2_2.yml’
+FINISHED --2024-10-04 08:35:20--
+Total wall clock time: 0.2s
+Downloaded: 1 files, 2.9K in 0.001s (2.42 MB/s)

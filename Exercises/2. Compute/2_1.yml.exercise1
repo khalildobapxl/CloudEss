@@ -1,0 +1,84 @@
+# This lab creates a VPC with instances, security groups, and key pairs
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  # Create a VPC with the given name
+  Labo2DebugVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: '10.0.0.0/16'
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: labo 2 - debug
+
+  PublicSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref Labo2DebugVPC
+      CidrBlock: '10.0.1.0/24'
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: public subnet
+
+  # Create a security group for the EC2 instances
+  Ec2IncomingHttpSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: ec2 incomming http
+      GroupDescription: Allow incoming HTTP traffic on port 80
+      VpcId: !Ref Labo2DebugVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  # Create a key pair named "exc1"
+  Exc1KeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: exc1
+
+  # Create the first EC2 instance
+  Labo2InstanceA:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0a1179631ec8933d7
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref Ec2IncomingHttpSecurityGroup
+      SubnetId: !Ref PublicSubnet
+      KeyName: !Ref Exc1KeyPair  # Linking the key pair "exc1" to the instance
+      Tags:
+        - Key: Name
+          Value: instA
+
+  # Create the second EC2 instance
+  Labo2InstanceB:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0a1179631ec8933d7
+      InstanceType: t2.large
+      SecurityGroupIds:
+        - !Ref Ec2IncomingHttpSecurityGroup
+      SubnetId: !Ref PublicSubnet
+      KeyName: !Ref Exc1KeyPair 
+      Tags:
+        - Key: Name
+          Value: instB
+
+
+# Solution
+# instance names: instA, instB
+# AMI name: Amazon Linux 2 AMI (HVM), SSD Volume Type
+# Instance types: t2.micro, t2.large
+# Public Ipv4: variable
+# Keypair names: exc1
+# security group names: ec2 incomming http
+# rules for security group: allow incoming HTTP traffic on port 80
+# why cost so high? t2.large instance type

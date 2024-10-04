@@ -1,0 +1,8 @@
+de cloud-init-output.log vinden we onder /var/log op het einde zien we duidelijk:
+starting httpd service
+Unknown operation 'starthttpd'.
+En als we in de documentatie kruipen vinden we:
+Start the web server with the command shown following.
+
+
+sudo systemctl start httpd

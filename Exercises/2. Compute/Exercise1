@@ -1,0 +1,19 @@
+What are the names of the 2 instances created? instA & instB
+
+What is the name of the AMI (Amazon machine image) that is used for both instances? 
+InstA: amzn2-ami-kernel-5.10-hvm-2.0.20240412.0-x86_64-gp2
+InstB: amzn2-ami-kernel-5.10-hvm-2.0.20240412.0-x86_64-gp2
+
+What is the instance type for both machines? t2.macro
+
+What is the public IPv4 address for InstA? 54.152.105.1
+
+What is the private IPv4 address for InstB? 3.93.65.135
+
+What is the name for the keypair linked to both machines? exc1
+
+Search for a linked security group. What is the name of this group? ec2 incomming http
+
+What rules are present in this security group? inbound poort 80 tcp http, outbound alles
+Our customer is complaining that the costs for his EC2 instances are expensive. What causes this issue and how would you fix this?
+instB is t2.large

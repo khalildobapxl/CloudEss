@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+  # Create a VPC
+  Labo2DebugVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: '10.0.0.0/16'
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: excercise 2 - debug
+
+  # Create public subnet
+  PublicSubnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref Labo2DebugVPC
+      CidrBlock: '10.0.2.0/24'
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+      - Key: Name
+        Value: public subnet
+  
+  # Create internet gateway
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+  
+  # Link internet gateway to VPC
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref Labo2DebugVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Create route table
+  RouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref Labo2DebugVPC   
+
+  # Link route table to public subnet
+  PublicSubnet1RouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet
+
+  # Create route to internet gateway
+  InternetRoute:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref RouteTable
+ 
+  # Create a security group for the EC2 instance
+  Ec2IncomingHttpSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: ec2 incomming http
+      GroupDescription: Allow incoming HTTP traffic on port 80
+      VpcId: !Ref Labo2DebugVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+  # Create an EC2 instance
+  Labo2InstanceA:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: ami-0a1179631ec8933d7
+      InstanceType: t2.micro
+      SecurityGroupIds:
+        - !Ref Ec2IncomingHttpSecurityGroup
+      SubnetId: !Ref PublicSubnet
+      KeyName: vockey
+      Tags:
+        - Key: Name
+          Value: imbroken
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          echo "running yum update -y"
+          yum update -y
+          echo "running yum install httpd"
+          yum install -y httpd
+          echo "starting httpd service"
+          systemctl starthttpd
+          echo "enable httpd service"
+          systemctl enable httpd
+
+# Solution
+# The Userdata script has a missing space in the systemctl start httpd command
+# This can be seen in the /var/log.cloud-init-output.log file on the EC2 instance
+# The fix is to run the command sudo systemctl start httpd
