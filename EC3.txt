@@ -1,0 +1,19 @@
+************
+[    EC3   ]
+************
+
+
+EC3 of Elastic Cloud Computing Cluster is gewoon een server instance op de cloud.
+
+Om de server aan te maken gaan we de dashboard gebruiken.
+1. Zoeken ec3 en daarop klikken. Daar klikken we op Launch instance.
+2. We vullen de naam in, het type systeem (in de les Amazon gekozen).
+3. In de key-pain sectie hebben we 2 mogelijkheden, ofwel een pair aanmaken maar pas op je hebt enkel een keer om de key te downloaden. Als je die kwijt ben, kan je je machine niet meer bereiken.
+Of vockey, deze kan je altijd downloaden in de lab onder aws details.
+4. in Storage kan je tot 30GB gratis gebruiken
+5. Klik op launch instance.
+
+Nu als je op je instance klikt zie je daaronder het public ip-adress. Met deze kan je je machine bereiken.
+Om dat te doen ga eerst naar de lab en download de key, met powershell gebruik pem met Putty gebruik ppk.
+in powershell doe: ssh -i [locatie van de key] ec2-user@[ipadres]
+de username ec2-user is standaard voor ec2 Amazon linx instances. Als je ubuntu gebruikt, is de username ubuntu.
