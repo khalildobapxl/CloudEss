@@ -1,0 +1,112 @@
+*************
+[     S3    ]
+*************
+
+Note: Alle commando's zijn tussen "" in de cli gebruik je die niet
+
+
+S3 (Simple Storage Service) is in essentie een system dat functioneert als een container die objecten kan opslaan. Je kan hem zien als een soort cloud opslag om daar data op te slaan.
+
+Setup:
+1. Eerst moet je een bucket (container) maken. De naam van de bucket moet uniek zijn doorheen de hele wereld, letterlijk, en mag geen hoofdletter bevatten.
+Dus het is best dat je uuidgen (of [guid]::NewGuid() in powershell) gebruikt na de naam. Deze gaat een uniek id genereren.
+
+bv:
+[Linux]
+"aws s3 mb s3://"testbucket-$(uuidgen)""
+[PowerShell]
+"aws s3 mb s3://testbucket-$([guid]::NewGuid())"
+
+2. Nu moet je een mapje syncen met de bucket. in dit mapje kan je je data opslaan:
+"aws s3 sync /home/khalil/bucket040 s3://[naam van je bucket]"
+dan moet je zoiets krijgen: upload: bucket040/test to s3://bucket-0400d842-7a37-42c6-9e1b-21e053ca71d8/test
+Nu zijn de gegevens binnen het mapje geüploaded in je bucket.
+
+NOTE: je moet elke keer syncen om de nieuwe data op te slaan in je bucket.
+
+Je kan op de website je buckets ook checken. Ga naar de lab en klik op het groene balleke. je wordt doorgestuurd naar aws dashboard.
+In de zoekbalk typ S3 en daarop klikken. Daar vind je al je buckets
+
+- Als je een bucket wil wegdoen: "aws s3 rb s3://bucket-0400d842-7a37-42c6-9e1b-21e053ca71d8 --force"
+--force gebruik je als de bucket niet leeg is.
+
+************
+[Exercise 2]
+************
+
+
+1. 
+"aws s3 mb s3://"exercise2-$(uuidgen)""
+output: make_bucket: exercise2-891521ad-45f8-456d-a237-92ca9d53cf36
+
+voor de makkelijkheid ga ik de naam van de bucket steken in een var
+
+mybuk=exercise2-891521ad-45f8-456d-a237-92ca9d53cf36
+
+2. 
+"aws s3 website s3://$mybuk --index-document index.html"
+
+3.
+"aws s3api put-public-access-block --bucket $mybuk --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=false,RestrictPublicBuckets=false""
+
+4. 
+"aws s3api put-bucket-policy --bucket "$mybuk" --policy "{
+  \"Version\": \"2012-10-17\",
+  \"Statement\": [
+    {
+      \"Sid\": \"PublicReadGetObject\",
+      \"Effect\": \"Allow\",
+      \"Principal\": \"*\",
+      \"Action\": \"s3:GetObject\",
+      \"Resource\": \"arn:aws:s3:::${mybuk}/*\"
+    }
+  ]
+}""
+
+UITLEG:
+"principal":"*" betekent iedereen een toegang tot de bucket heeft
+"Action": "s3:GetObject" betekent dat die (van principal) lezen rechten hebben
+"Resource": "arn:aws:s3:::exercise2-891521ad-45f8-456d-a237-92ca9d53cf36/*" betekent alle objecten in de bucket
+
+5.
+aws s3 sync mywebsite s3://$mybuk
+mywebsite is een mapje met index.html daarin
+
+6.
+via deze link: http://exercise2-891521ad-45f8-456d-a237-92ca9d53cf36.s3-website-us-east-1.amazonaws.com kan ik de website bezoeken
+
+
+
+*******************
+[Advanced Exercise]
+*******************
+
+Step 1:
+
+1. 
+
+ik ga mybuk gebruiken
+
+2. 
+"aws s3api put-bucket-versioning --bucket $mybuk --versioning-configuration Status=Enabled"
+
+3.
+Ik heb de index.html al in de buvket, ik ga die gewoon wijzigen en resyncen.
+
+4.
+"aws s3api list-object-versions --bucket $mybuk --prefix index.html"
+
+5.
+
+
+Step 2:
+
+1.
+Ik ga de access tot mybuk blokkeren:
+"aws s3api put-public-access-block --bucket $mybuk --public-access-block-configuration "BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true""
+
+2.
+"aws s3 presign s3://$mybuk/index.html --expires-in 3600"
+output: https://exercise2-388911c4-06c9-45f3-9bc4-7055fdd47bfe.s3.amazonaws.com/index.html?AWSAccessKeyId=ASIAQK35KJ4HCY3X4XGE&Signature=tRvf5CnTZeBbhR1yLS0AhC7utOs%3D&x-amz-security-token=IQoJb3JpZ2luX2VjEI3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIEExgDNxyTta7XTM%2FEV6W8Oqn9oQyARfMkRMJRYGCN5WAiB%2F9h7KvMiHDPl2%2BqouCxn6%2FNfx18myYjdi%2FmqqJqAU%2BSq0AggWEAAaDDAyMzM0ODI2ODgxNCIMCx5qQ1wxqOVjWFK7KpEC9MKls0dkRb9jztqZUsVapNVJBzUlfCnRM7Q1UXoxoHfSJxaLiLRJ6r9f%2FOOFxL48m3SmS2tXSXng53AIcXNeSgEsmydwxsuTn9q2%2FfOdZ4WjMYmJ5YnWnuOhcUeUK009fLCWALl8VWeCS4LI8lTP%2BL3dOevu4OMhERiogO5si2k7H9Vs5J9oQ64hYAJ1SiwXlfu%2F76WMMO%2BRZnQrvwHASA%2BUOoU6cYSTc4z0eVn8wCFSjVF4yFC0RBfbFjlO5u%2FLh3a%2FnqPlOFyvxKdihWqyMrZk%2FtB5a3h%2B6fheiw5ufUOesQeI4FgRT6jcuyfn22XQpthUsIO6JXpFIM%2Bja54Ch6RGW4Y41bvBOOAslMNwdcoWMIivqLkGOp4BJNy%2FEveIIimXJjq2RS%2FB7mGTA5QvxVx%2B8suWOK1vlvqciBCjvoBJWVPqkp9tmloSgHF6%2BVQzKaUCqOmz%2Fvs%2BgmREFl5qFET%2F3UkVAm4aij%2BnDj4b35YmZAzWBS%2BgTgW4Wv3avfoKXJzOWwzKDBDpwojp868apsXA0P%2F9Uf8osX81VHbXurKj2KkPcfPraLdv44PIN%2BfAbe47UOSPtrM%3D&Expires=1730822244
+
+

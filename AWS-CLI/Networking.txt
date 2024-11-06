@@ -1,0 +1,206 @@
+**************
+[Networking I]
+**************
+
+Note: Alle commando's zijn tussen "", in de cli gebruik je die niet
+
+[Lab: Creating a Custom VPC with Public and Private Subnets]
+
+#1. Create custom VPC
+
+"aws ec2 create-vpc --cidr-block 10.0.0.0/16 --tag-specifications 'ResourceType=vpc, Tags=[{Key=name,Value=MyCustomVPC}]'"
+
+output: 
+{
+    "Vpc": {
+        "CidrBlock": "10.0.0.0/16",
+        "DhcpOptionsId": "dopt-026171e1369660c45",
+        "State": "pending",
+        "VpcId": "vpc-0895ea1b0436f559b",
+        "OwnerId": "023348268814",
+        "InstanceTenancy": "default",
+        "Ipv6CidrBlockAssociationSet": [],
+        "CidrBlockAssociationSet": [
+            {
+                "AssociationId": "vpc-cidr-assoc-0862d2b6050c770c2",
+                "CidrBlock": "10.0.0.0/16",
+                "CidrBlockState": {
+                    "State": "associated"
+                }
+            }
+        ],
+        "IsDefault": false,
+        "Tags": [
+            {
+                "Key": "name",
+                "Value": "MyCustomVPC"
+            }
+        ]
+    }
+}
+
+voor de makkelijkheid: vpcid=vpc-0895ea1b0436f559b
+
+#2. Create 2 subnets
+
+
+"aws ec2 create-subnet --vpc-id "$vpcid" --cidr-block 10.0.1.0/24 --availability-zone us-east-1a --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=PublicSubnet}]'"
+"aws ec2 create-subnet --vpc-id "$vpcid" --cidr-block 10.0.2.0/24 --availability-zone us-east-1a --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=PrivateSubnet}]'"
+
+Om te checken: "aws ec2 describe-subnets --filters "Name=vpc-id,Values=$vpcid""
+
+"publicsubid=subnet-062447e763375f41a" das de id van de PublicSubnet die ik kreeg (nodig voor volgende stappen)
+"privatesubid=subnet-071b2739934c68fda"
+
+#3. Create and Attach an Internet Gateway
+
+#. Create the Internet Gateway:
+"aws ec2 create-internet-gateway --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=MyIGW}]'"
+
+output: 
+
+{
+    "InternetGateway": {
+        "Attachments": [],
+        "InternetGatewayId": "igw-01b2775532cc0814c",
+        "OwnerId": "023348268814",
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "MyIGW"
+            }
+        ]
+    }
+}
+
+"igwid=igw-01b2775532cc0814c"
+
+#. Attach the Internet Gateway to the VPC:
+"aws ec2 attach-internet-gateway --internet-gateway-id "$igwid" --vpc-id "$vpcid""
+
+#4. Create a Route Table for the Public Subnet
+Van de vorige oefeningen heb ik de igwid en publicsubid en vpcid al opgeslagen in vars voor de makkelijkheid
+
+#. Create the route table:
+"aws ec2 create-route-table --vpc-id "$vpcid" --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=PublicRouteTable}]'"
+#. Add the route:
+"aws ec2 create-route --route-table-id "$routeid" --destination-cidr-block 0.0.0.0/0 --gateway-id "$igwid""
+#. Associate the route table with the public subnet:
+"aws ec2 associate-route-table --route-table-id "$routeid" --subnet-id "$publicsubid""
+
+#5 Create a NAT Gateway for the Private Subnet
+
+#. Allocate the Elastic IP:
+"aws ec2 allocate-address --domain vpc"
+Output:
+{
+    "PublicIp": "100.26.81.8",
+    "AllocationId": "eipalloc-08942f8d3e6a14707",
+    "PublicIpv4Pool": "amazon",
+    "NetworkBorderGroup": "us-east-1",
+    "Domain": "vpc"
+}
+
+"elasid=eipalloc-08942f8d3e6a14707"
+#. Create the NAT Gateway:
+"aws ec2 create-nat-gateway --tag-specifications 'ResourceType=natgateway,Tags=[{Key=Name,Value=MyNATGateway}]' --subnet-id $publicsubid --allocation-id $elasid"
+Output:
+{
+    "ClientToken": "c1eea15e-8d22-4329-948b-d583a842bb12",
+    "NatGateway": {
+        "CreateTime": "2024-11-05T16:04:05.000Z",
+        "NatGatewayAddresses": [
+            {
+                "AllocationId": "eipalloc-08942f8d3e6a14707"
+            }
+        ],
+        "NatGatewayId": "nat-0f5f74d7fb590edf0",
+        "State": "pending",
+        "SubnetId": "subnet-062447e763375f41a",
+        "VpcId": "vpc-0895ea1b0436f559b",
+        "Tags": [
+            {
+                "Key": "Name",
+                "Value": "MyNATGateway"
+            }
+        ],
+        "ConnectivityType": "public"
+    }
+}
+
+"natid=nat-0f5f74d7fb590edf0"
+#. Wait for the NAT Gateway to become available:
+"aws ec2 wait nat-gateway-available --nat-gateway-ids $natid" met dit commando pauzeert je cli totdat de nat gateway effectief aan is. Duurt ongeveer een minuut
+
+#6 Create a Route Table for the Private Subnet:
+
+Hetzelfde als de public
+
+"aws ec2 create-route-table --vpc-id "$vpcid" --tag-specifications 'ResourceType=route-table,Tags=[{Key=Name,Value=PrivateRouteTable}]'"
+"aws ec2 create-route --route-table-id "$prirouteid" --destination-cidr-block 0.0.0.0/0 --nat-gateway-id "$natid""
+"aws ec2 associate-route-table --route-table-id "$prirouteid" --subnet-id "$privatesubid""
+te checken: "aws ec2 describe-route-tables --route-table-ids $prirouteid"
+
+
+#7 Test Connectivity:
+Uitleg over het aanmaken van ec2 in algemeen staan in EC2.txt
+
+#. Create an ssh key:
+"aws ec2 create-key-pair --key-name MyEd25519Key2 --key-type ed25519 --query 'KeyMaterial' --output text > .ssh/MyEd25519Key.pem"
+"chmod 600 .ssh/MyEd25519Key.pem"
+#. Create a sec group for pub instance:
+"aws ec2 create-security-group --group-name PubGroup --description "Allow ssh connection from my ip address" --vpc-id $vpcid"
+"pubsgid=sg-056ad32ddc5796881"
+"aws ec2 authorize-security-group-ingress --group-id $pubsgid --protocol tcp --port 22 --cidr <Jouw public ip, niet de privè>/32"
+#. Create a public instance:
+"aws ec2 run-instances --image-id ami-01e3c4a339a264cc9 --instance-type t2.micro --count 1 --subnet-id $publicsubid --security-group-ids "$pubsgid" --associate-public-ip-address --key-name MyEd25519Key2 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=Publ
+icInstance}]'"
+
+Nu moet je kunnen verbinden met ssh.
+
+#. Create a sec group for private instance:
+"aws ec2 create-security-group --group-name PrivateGroup --description "Allow ssh connection from all ip addresses" --vpc-id $vpcid"
+"prisgid=sg-056ad32ddc5796881"
+"aws ec2 authorize-security-group-ingress --group-id $prisgid --protocol tcp --port 22 --cidr 0.0.0.0/0 "
+#. Create a private instance:
+"aws ec2 run-instances --image-id ami-01e3c4a339a264cc9 --instance-type t2.micro --count 1 --subnet-id $privatesubid --security-group-ids "$sshsgid" --key-name MyEd25519Key2 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=PrivateInstance}]'"
+#. Use scp to copy the ssh key to the public isntance to access the private one:
+"scp -i .ssh/MyEd25519Key2.pem .ssh/MyEd25519Key2.pem ec2-user@<pub ip addres>:/home/ec2-user/.ssh"
+
+Nu kan je van de public instance verbinden met de private instance met ssh
+
+
+*************************************************************************************************************
+
+
+************
+[Exercise 1]
+************
+
+Ik ga ervan uit dat alle stappen van de lab doorlopen zijn.
+
+"aws ec2 create-security-group --group-name public_webserverSG --description "Allow http traffic from anywhere and ssh traffic from my ip address" --vpc-id "$vpcid""
+"publicsgid=sg-034c3ccc0183a8e48"
+"aws ec2 authorize-security-group-ingress --group-id $publicsgid --protocol tcp --port 22 --cidr <Your public ip address>/32"
+"aws ec2 authorize-security-group-ingress --group-id $publicsgid --protocol tcp --port 80 --cidr 0.0.0.0/0"
+"aws ec2 run-instances --image-id ami-01e3c4a339a264cc9 --instance-type t2.micro --count 1 --subnet-id $publicsubid --security-group-ids "$publicsgid" --associate-public-ip-address --key-name MyEd25519Key2 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Valu
+e=WebServerInstance}]'"
+
+
+************
+[Exercise 2]
+************
+
+"aws ec2 create-security-group --group-name private_webserverSG --description "Allow only traffic from the security group of PublicWebserver" --vpc-id "$vpcid""
+"aws ec2 authorize-security-group-ingress --group-id $privatesgid --protocol tcp --port 80 --source-group "$publicsgid""
+"aws ec2 authorize-security-group-ingress --group-id $privatesgid --protocol tcp --port 22 --source-group "$publicsgid""
+"aws ec2 run-instances --image-id ami-01e3c4a339a264cc9 --instance-type t2.micro --count 1 --subnet-id $privatesubid --security-group-ids "$privatesgid" --key-name MyEd25519Key2 --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=PrivateWebInstance}]'"
+
+
+*************************************************************************************************************
+
+***************
+[Networking II]
+***************
+
+

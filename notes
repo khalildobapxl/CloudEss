@@ -1,1 +1,3 @@
 Wanneer je een security group wil toekennen aan je ec2 instances dat ze enkel traffic toelaten van de loadbalancer, moet je de security group id van de load balancer plakken als source vor de security group van je isntances
+
+curl ifconfig.me toont je public ipadres

@@ -1,25 +1,8 @@
-*************
-[   Start   ]
-*************
-
-Eerst en altijd moet je een lab starten in aws academy. Wanneer je een groen balleke ziet, kan je beginnen.
-1. Klik op AWS details. Kopieer het default gedeelte volledig en plak deze in .aws/credentials. Deze vind je in linux in je home folder of windows onder c/users/username/.aws.
-Als je het daar niet vindt, dan ga naar de terminal en voer uit: aws configure. hoeft niks te type gewoon enter enter tot het einde. nu vind je het mapje met credentials en kan je details daar plakken
-
-2. In Config bestand in .aws moet je deze gegevens aanvullen:
-[details]
-region=........[us-east-1]
-output=json
-region vind je onder aws details helemaal onderaan. en de output is json.
-
-3. Nu test je of dat gelukt is of niet door dit commando uit te voeren: aws sts get-caller-identity
-Je moet je e-mailadres krijgen
-
-
-
 ************
 [    EC3   ]
 ************
+
+Note: Alle commando's zijn tussen "" in de cli gebruik je die niet
 
 
 EC3 of Elastic Cloud Computing Cluster is gewoon een server instance op de cloud.
