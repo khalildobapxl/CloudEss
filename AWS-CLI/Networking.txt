@@ -4,6 +4,12 @@
 
 Note: Alle commando's zijn tussen "", in de cli gebruik je die niet
 
+*****
+[VPC]
+*****
+
+
+
 [Lab: Creating a Custom VPC with Public and Private Subnets]
 
 #1. Create custom VPC

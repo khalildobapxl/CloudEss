@@ -1,0 +1,66 @@
+************
+[    EC3   ]
+************
+
+Note: Alle commando's zijn tussen "" in de cli gebruik je die niet
+
+
+EC3 of Elastic Cloud Computing Cluster is gewoon een pc op de cloud.
+
+
+[CLI]
+
+Je begint met "aws ec2 run-instance" daarna gaan we een paar opties gebruiken:
+
+--instance-id: hier gaan we de ami-id van een image gebruiken. Beste manier om een ami te vinden: Ga naar Console -> EC2 -> LinkerKant AMI -> hier zoeken we naar images.
+vb: --image-id ami-0984f4b9e98be44bf
+
+--instance-type: hier gaan we de type van de instance keizen (No shit, Sherlock!) er zijn verschillende types: t2.micro, t2.medium, c5.large ....enz.
+vb: --instance-type t2.micro
+ 
+--count: vanzelfsprekend.
+
+--subnet-id: in welke subnet de instance zich moet bevinden.
+vb: --subnet-id subnet-0ed39c5aaf912f450
+
+--security-group-ids: Hier kan je meerde SGs gebruiken.
+vb: --security-group-ids sg-0e541cf58215447aa sg-02401f4ff302f628f
+
+--associate-public-ip-address: als je wil dat de instance een public id krijgt, als de subnet is ingesteld dat het automatisch IPs geeft, is deze optie niet nodig.
+
+--key-name: een key instellen om te gebruiken als je met ssh wil verbinden. Onderaan vind je hoe je een ssh key kan maken voor ec2 instances. de standaard key is vockey
+vb: --key-name vockey
+
+--tag-specifications: Tags zijn belangrijk en hoofdlettergevoelig, de standaard syntax is: 'ResourceType=<vpc,subnet,instance enz>, Tags=[{Key=<Name, Owner enz>,Value=<waarde voor de key>}]'
+vb:  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=PublicInstance}]'"
+
+--user-data: We kunnen ofwel een bestand toevoegen (de pad) of direct de script schrijven. Als je kiest een pad te geven moet deze voorgevoegd met file:// vb: --user-data file://userdata.sh
+
+--block-device-mappings: deze wordt gebruikt voor de opslag. Als je deze niet instelt krijg je de standaardinstellingen voor de image. 
+Syntax is: '[{"DeviceName":"<path>","Ebs":{"VolumeSize":<size>,"VolumeType":"","DeleteOnTermination":true}}]'
+
+- "DeviceName": De pad waar de volume wordt gemount, de syntax voor de naam: /dev/xvd[a-z]
+- "VolumeSize": de grootte van de volume
+- "VolumeType": 
+gp3 of gp2: General Purpose SSD.
+io1 of io2: Provisioned IOPS SSD.
+st1: Throughput Optimized HDD.
+sc1: Cold HDD.
+- "DeleteOnTermination": true of false gaat de volume wegdoen (of niet) als de instance wordt beëndigd
+
+vb: --block-device-mappings "DeviceName=/dev/xvda,Ebs={VolumeSize=10,DeleteOnTermination=true}"
+
+
+Ec2 instance vb:
+
+"aws ec2 run-instances --image-id ami-0984f4b9e98be44bf --instance-type t2.micro --count 1 --subnet-id subnet-0ed39c5aaf912f450 \
+--security-group-ids sg-02401f4ff302f628f --associate-public-ip-address --key-name vockey \
+--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=PublicInstance}]' \
+--block-device-mappings "DeviceName=/dev/xvda,Ebs={VolumeSize=10,DeleteOnTermination=true}" --user-data "sudo yum -y update &&  sudo yum -y upgrade""
+
+
+*****
+[SSH]
+*****
+"aws ec2 create-key-pair --key-name <NAME> --key-type ed25519/rsa --query 'KeyMaterial' --output text > .ssh/<NAME>.pem"
+
