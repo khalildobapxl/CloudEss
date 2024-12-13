@@ -11,7 +11,7 @@ const dynamoDB = new DynamoDBClient({ region: 'your-region' });
 
 export const handler = async (event) => {
     try {
-        const id = event.pathParameters.id; // Extract the item ID from the path parameter
+        const id = event.id;
 
         const params = {
             TableName: 'YourTableName',

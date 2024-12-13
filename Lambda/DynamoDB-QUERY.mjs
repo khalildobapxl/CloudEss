@@ -10,7 +10,7 @@ const dynamoDB = new DynamoDBClient({ region: 'your-region' });
 
 export const handler = async (event) => {
     try {
-        const partitionKey = event.queryStringParameters.key; // Extract Partition Key from query string
+        const partitionKey = event.key;
 
         const params = {
             TableName: 'YourTableName',
